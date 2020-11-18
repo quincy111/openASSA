@@ -1,0 +1,7 @@
+name = "LifeValReserve"
+uuid = "357cd062-7666-4770-9d41-073dd211c572"
+authors = ["Franco Marais and Jan Blomerus"]
+version = "0.1.0"
+
+[deps]
+LifeValStructures = "4ccda3a8-a995-430d-b085-07f89fe49eeb"

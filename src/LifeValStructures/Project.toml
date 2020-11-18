@@ -1,0 +1,7 @@
+name = "LifeValStructures"
+uuid = "4ccda3a8-a995-430d-b085-07f89fe49eeb"
+authors = ["Franco Marais and Jan Blomerus"]
+version = "0.1.0"
+
+[deps]
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"

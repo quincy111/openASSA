@@ -1,0 +1,11 @@
+name = "LifeValData"
+uuid = "012c80c3-7a2f-4d3a-930f-ce8b08a6bba9"
+authors = ["Franco Marais and Jan Blomerus"]
+version = "0.1.0"
+
+[deps]
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+JuliaDB = "a93385a2-3734-596a-9a66-3cfbb77141e6"
+LifeValStructures = "4ccda3a8-a995-430d-b085-07f89fe49eeb"
+XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
