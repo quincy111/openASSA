@@ -217,6 +217,7 @@ uuid = "012c80c3-7a2f-4d3a-930f-ce8b08a6bba9"
 version = "0.1.0"
 
 [[LifeValFunc]]
+deps = ["DataFrames", "JuliaDB", "LifeValStructures"]
 path = "src/LifeValFunc"
 uuid = "70b77e4d-6db8-4f7d-879a-5bd7750d9251"
 version = "0.1.0"
