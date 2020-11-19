@@ -121,7 +121,7 @@ function setBasis(policy, runtype, basisData, profit)
 
     expenses = exp_ren_prem .+ (exp_ren/12) * (1 + exp_infl) .^((j .- 1)/12)
 
-    return [aqxd, tapx, vt, j, apx, expenses, exp_init, exp_claim, prem, sa]
+    return [aqxd, tapx, vt, apx, expenses, exp_init, exp_claim, prem, sa]
 end
 
 function setAlloc(policy, runno, prem, fmc_sens, basisData, profit)
@@ -221,7 +221,7 @@ function calcNUF(policy, netPrem, fundch, initExp, renExp, aqxd, apx, unitf, uni
 end
 
 function Calc(policy::LifeValStructures.LifeAssurance, runtype, basisData, unitPrices)
-    aqxd, tapx, vt, j, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy,runtype, basisData, 0)
+    aqxd, tapx, vt, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy,runtype, basisData, 0)
 
     deathClaims = (sa .+ exp_claim) .* aqxd
     cf = deathClaims + expenses .- prem
@@ -230,7 +230,7 @@ function Calc(policy::LifeValStructures.LifeAssurance, runtype, basisData, unitP
 end
 
 function Calc(policy::LifeValStructures.Annuity, runtype, basisData, unitPrices)
-    aqxd, tapx, vt, j, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy, runtype, basisData, 0)
+    aqxd, tapx, vt, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy, runtype, basisData, 0)
 
     deathClaims = (sa/12 .+ exp_claim) .* apx
     cf = deathClaims + expenses .- prem
@@ -239,7 +239,7 @@ function Calc(policy::LifeValStructures.Annuity, runtype, basisData, unitPrices)
 end
 
 function Calc(policy::LifeValStructures.TermAssurance, runtype, basisData, unitPrices)
-    aqxd, tapx, vt, j, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy, runtype, basisData, 0)
+    aqxd, tapx, vt, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy, runtype, basisData, 0)
 
     deathClaims = (sa .+ exp_claim) .* aqxd
     cf = deathClaims + expenses .- prem
@@ -248,7 +248,7 @@ function Calc(policy::LifeValStructures.TermAssurance, runtype, basisData, unitP
 end
 
 function Calc(policy::LifeValStructures.EndowmentAssurance, runtype, basisData, unitPrices)
-    aqxd, tapx, vt, j, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy, runtype, basisData, 0)
+    aqxd, tapx, vt, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy, runtype, basisData, 0)
 
     deathClaims = (sa .+ exp_claim) .* aqxd
     deathClaims[policy.projMax]=deathClaims[policy.projMax]/aqxd[policy.projMax]
@@ -258,7 +258,7 @@ function Calc(policy::LifeValStructures.EndowmentAssurance, runtype, basisData, 
 end
 
 function Calc(policy::LifeValStructures.EndowmentAssuranceUL, runtype, basisData, unitPrices)
-    aqxd, tapx, vt, j, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy, runtype, basisData, 0)
+    aqxd, tapx, vt, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy, runtype, basisData, 0)
 
     prem_alloc, fmc = setAlloc(policy, runtype.runno, prem, runtype.fmc_sens, basisData, 0)
 
@@ -276,7 +276,7 @@ function Calc(policy::LifeValStructures.EndowmentAssuranceUL, runtype, basisData
     #writedlm("nbu1.csv", output, ',')
 
     #profit test BASIS
-    aqxd, tapx, vt, j, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy, runtype, basisData, 1)
+    aqxd, tapx, vt, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy, runtype, basisData, 1)
     prem_alloc, fmc = setAlloc(policy, runtype.runno, prem, runtype.fmc_sens, basisData, 1)
     #currently only 1 fund, 100% allocation
     fmcp = (1 .+ fmc) .^ (1/12) .- 1 #fmc is annual, need to make it monthly
@@ -297,7 +297,7 @@ function Calc(policy::LifeValStructures.EndowmentAssuranceUL, runtype, basisData
 end
 
 function Prem(policy::LifeValStructures.LifeAssurance, runtype, basisData, unitPrices)
-    aqxd, tapx, vt, j, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy,runtype, basisData, 0)
+    aqxd, tapx, vt, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy,runtype, basisData, 0)
 
     deathClaims = (sa .+ exp_claim) .* aqxd
     cf = deathClaims + expenses
@@ -309,7 +309,7 @@ function Prem(policy::LifeValStructures.LifeAssurance, runtype, basisData, unitP
 end
 
 function Prem(policy::LifeValStructures.Annuity, runtype, basisData, unitPrices)
-    aqxd, tapx, vt, j, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy, runtype, basisData, 0)
+    aqxd, tapx, vt, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy, runtype, basisData, 0)
 
     deathClaims = (sa/12 .+ exp_claim) .* apx
     cf = deathClaims + expenses
@@ -321,7 +321,7 @@ function Prem(policy::LifeValStructures.Annuity, runtype, basisData, unitPrices)
 end
 
 function Prem(policy::LifeValStructures.TermAssurance, runtype, basisData, unitPrices)
-    aqxd, tapx, vt, j, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy, runtype, basisData, 0)
+    aqxd, tapx, vt, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy, runtype, basisData, 0)
 
     deathClaims = (sa .+ exp_claim) .* aqxd
     cf = deathClaims + expenses
@@ -333,7 +333,7 @@ function Prem(policy::LifeValStructures.TermAssurance, runtype, basisData, unitP
 end
 
 function Prem(policy::LifeValStructures.EndowmentAssurance, runtype, basisData, unitPrices)
-    aqxd, tapx, vt, j, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy, runtype, basisData, 0)
+    aqxd, tapx, vt, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy, runtype, basisData, 0)
 
     deathClaims = (sa .+ exp_claim) .* aqxd
     deathClaims[policy.projMax]=deathClaims[policy.projMax]/aqxd[policy.projMax]
@@ -347,7 +347,7 @@ function Prem(policy::LifeValStructures.EndowmentAssurance, runtype, basisData, 
 end
 
 function Prem(policy::LifeValStructures.EndowmentAssuranceUL, runtype, basisData, unitPrices)
-    aqxd, tapx, vt, j, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy, runtype, basisData, 0)
+    aqxd, tapx, vt, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy, runtype, basisData, 0)
 
     prem_alloc, fmc = setAlloc(policy, runtype.runno, prem, runtype.fmc_sens, basisData, 0)
 
@@ -365,7 +365,7 @@ function Prem(policy::LifeValStructures.EndowmentAssuranceUL, runtype, basisData
     #writedlm("nbu1.csv", output, ',')
 
     #profit test BASIS
-    aqxd, tapx, vt, j, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy, runtype, basisData, 1)
+    aqxd, tapx, vt, apx, expenses, exp_init, exp_claim, prem, sa = setBasis(policy, runtype, basisData, 1)
     prem_alloc, fmc = setAlloc(policy, runtype.runno, prem, runtype.fmc_sens, basisData, 1)
     #currently only 1 fund, 100% allocation
     fmcp = (1 .+ fmc) .^ (1/12) .- 1 #fmc is annual, need to make it monthly
