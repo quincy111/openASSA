@@ -4,10 +4,10 @@ using DrWatson
 @quickactivate "LifeVal"
 
 using JuliaDB, DelimitedFiles, DataFrames, XLSX, ProgressMeter #, Traceur
-using Random, Distributions
-#using IterableTables
+using Random, Distributions #not technically required, but added here so that all modules use same project
+
 using Pkg, Pkg.Artifacts
-#using CUDA
+#using CUDA, Distributed    #wip
 
 using LifeValStructures
 using LifeValData
@@ -15,41 +15,16 @@ using LifeValFunc
 using LifeValReserve
 using LifeValGenerate
 
-#fooifier_path() = joinpath(artifact"fooifier", "bin", "fooifier" * (Sys.iswindows() ? ".exe" : ""))
-  #println("Running the artifact")
-  #res = read(`$(fooifier_path()) 5 10`, String)
-  #println("The result of 2*5^2 - 10 == $res")
-
 # --------------------------------------------------- #
-#THE FOLLOWING SECTION SHOULD BE RUN ONCE FOR ANY CUSTOM INPUT
+#THE FOLLOWING SECTION SHOULD BE RUN ONCE FOR ANY CUSTOM INPUT (eg CSV/DB/SQLITE)
+#and should be added to the Data Conversion module eventually!
 #dataFile = "ulData2.csv"
 #policyData3 = loadtable(dataFile)
 #save(policyData3, "ulData3")
 
-function real_main(filePath, fileName)
-    #@show ARGS
-    #@show Base.PROGRAM_FILE
-    #@show DEPOT_PATH
-    #@show LOAD_PATH
-    #@show pwd()
-    #@show Base.active_project()
-    #@show Threads.nthreads()
-    #@show Sys.BINDIR
-    #display(Base.loaded_modules)
-    #println()
-
-    #filePath=joinpath(dirname(@__FILE__), "test\\Basis2020127.xlsx")
-    #filePath = joinpath(Pkg.dir("LifeVal"),"input") * "\\"
-    #filePath = "c:\\julialifeval\\lifeval\\input\\"
-    #import LifeVal; joinpath(dirname(pathof(LifeVal)), "..", paths...)
-    #fileName = filePath * "Basis20201285v.xlsx"
-
-    runsettings, spcode, names = LifeValData.Initialise(filePath, fileName)
+function real_main()
+    runsettings, spcode, names, outfile = LifeValData.Initialise(filePath, fileName)
     policyData, basisData, fData = LifeValData.Read_Data(runsettings, spcode, names, filePath)
-
-    PolicyType = [LifeValStructures.LifeAssurance, LifeValStructures.TermAssurance, LifeValStructures.Annuity, LifeValStructures.EndowmentAssurance, LifeValStructures.LifeAssuranceUL, LifeValStructures.EndowmentAssuranceUL]
-    inputOrder = (:id, :sex, :age, :Term, :Term_if, :Premium, :Sum_Assured, :spc,
-        :prem_esc, :sa_esc, :esc_m, :units_1, :units_99, :alloc_1, :alloc_99)
 
     reserveList = LifeValFunc.Table_Length(policyData, runsettings)
 
@@ -92,25 +67,17 @@ function real_main(filePath, fileName)
 
     #combined = table(policyData,reserveList)
 
-    writedlm(filePath * "basis65.csv", reserveList, ',')
+    writedlm(filePath * outfile, reserveList, ',')
 end
 
+#THE GPU ENVIRONMENT IS NOT ACTIVATED AT THE MOMENT DUE TO CuArray ERROR (bits??)
 function real_main_gpu()
-    #filePath=joinpath(dirname(@__FILE__), "test\\Basis2020127.xlsx")
-    #filePath = joinpath(Pkg.dir("LifeVal"),"input") * "\\"
-    #filePath = "c:\\julialifeval\\lifeval\\input\\"
-    #import LifeVal; joinpath(dirname(pathof(LifeVal)), "..", paths...)
-    #fileName = filePath * "Basis20201281.xlsx"
 
-    runsettings, spcode, names = LifeValData.Initialise(filePath, fileName)
+    runsettings, spcode, names, outfile = LifeValData.Initialise(filePath, fileName)
     policyData, basisData, fData = LifeValData.Read_Data(runsettings, spcode, names, filePath)
 
-    PolicyType = [LifeValStructures.LifeAssurance, LifeValStructures.TermAssurance, LifeValStructures.Annuity, LifeValStructures.EndowmentAssurance, LifeValStructures.LifeAssuranceUL, LifeValStructures.EndowmentAssuranceUL]
-    inputOrder = (:id, :sex, :age, :Term, :Term_if, :Premium, :Sum_Assured, :spc,
-        :prem_esc, :sa_esc, :esc_m, :units_1, :units_99, :alloc_1, :alloc_99)
-
     reserveList = LifeValFunc.Table_Length(policyData, runsettings)
-    policyList1 = CuArray(policyData)
+    policyList1 = CuArray(policyData)  #this is wip
 
     o = nrow(runsettings) #ProgressMeter
     q = Progress(o, 1) #ProgressMeter
@@ -118,7 +85,7 @@ function real_main_gpu()
     @time for runtype in eachrow(runsettings)
         # eventually create struct called policyList
         policyList = LifeValFunc.Table_to_Policies(policyData[runtype.runno], :prod, inputOrder, PolicyType)
-        policyList = CuArray(policyList)
+        policyList = CuArray(policyList)  #this is an ERROR???
 
         #CALC UNIT PRICES, this must be set per runno and only required up to max projTerm
         #ulList = filter!(policy.spcode > 49, policyList)
@@ -148,25 +115,13 @@ function real_main_gpu()
 
     #combined = table(policyData,reserveList)
 
-    writedlm(filePath * "basis65.csv", reserveList, ',')
+    writedlm(filePath * outfile, reserveList, ',')
 end
 
+#MAKE SURE TO USE THE PREMS OUTPUT FOR PREMIUMS!
 function real_main_prem()
-
-    #filePath = "c:\\julialifeval\\lifeval\\input\\"
-    #import LifeVal; joinpath(dirname(pathof(LifeVal)), "..", paths...)
-    #fileName = filePath * "Basis20201283 - test1.xlsx"
-    #fileName = filePath * "Basis20201285p.xlsx"
-
-    runsettings, spcode, names = LifeValData.Initialise(filePath, fileName)
+    runsettings, spcode, names, outfile = LifeValData.Initialise(filePath, fileName)
     policyData, basisData, fData = LifeValData.Read_Data(runsettings, spcode, names, filePath)
-
-    #for premiums we require age at inception
-    #policyData.age = policyData.age .- policyData.Term_if / 12
-
-    PolicyType = [LifeValStructures.LifeAssurance, LifeValStructures.TermAssurance, LifeValStructures.Annuity, LifeValStructures.EndowmentAssurance, LifeValStructures.LifeAssuranceUL, LifeValStructures.EndowmentAssuranceUL]
-    inputOrder = (:id, :sex, :age, :Term, :Term_if, :Premium, :Sum_Assured, :spc,
-        :prem_esc, :sa_esc, :esc_m, :units_1, :units_99, :alloc_1, :alloc_99)
 
     premList = LifeValFunc.Table_Length(policyData, runsettings)
 
@@ -194,11 +149,11 @@ function real_main_prem()
 
         premList[:, runtype.runno] = map(x -> LifeValReserve.Prem(x, (runtype, basisData, unitpriceList)...), policyList)
 
+        #INSTEAD OF THE MAP ABOVE, THE FOLLOWING CAN ALSO BE USED, 2X SLOWER...
         #p = Progress(length(policyList), barglyphs=BarGlyphs("[=> ]"))
         #progress_map(policyList, progress=p) do x
         #    premList[:, runtype.runno] .= LifeValReserve.Prem(x, (runtype, basisData, unitpriceList)...)
         #end
-
 
         #outputtab = table(pol = policyList, res = reserveList)
         #writelm("out1.csv", outputtab, ",")
@@ -206,7 +161,7 @@ function real_main_prem()
         next!(q) #ProgressMeter
     end
 
-    writedlm(filePath * "prem67.csv", premList, ',')
+    writedlm(filePath * outfile, premList, ',')
 end
 
 #POLICYLIST test environment
@@ -220,17 +175,12 @@ end
 #runtype=runsettings[1,:]
 
 function real_main_gen()
-
-    #filePath = "c:\\julialifeval\\lifeval\\input\\"
-    #fileName = filePath * "rand_input2.xlsx"
     inputs = DataFrame(XLSX.readtable(fileName, "randominput")...)
     totpolicies = []
     totprems = []
     @time for poltype in eachrow(inputs)
-        # eventually create struct called policyList
         poltypevec = Vector(poltype)
         policyList, premList =  LifeValGenerate.Gen(poltypevec)
-        #premList =  LifeValGenerate.PremGen(poltypevec)
         for k in 1:length(policyList[:,1])
             polvect=policyList[k,:]
             push!(totpolicies,polvect)
@@ -241,35 +191,26 @@ function real_main_gen()
         end
     end
 
-    #policyTable=table(totpolicies, names = [:id,	:prod,	:age,	:SumAssured,	:Term,	:Term_if,	:Premium,	:sex,
-    # :spc, :prem_esc, :sa_esc,	:esc_m,	:units_1,	:units_99,	:alloc_1,	:alloc_99,	:proj_max])
-
-    writedlm(filePath * "inputs65.csv", totpolicies, ',')
-    writedlm(filePath * "prems65.csv", totprems, ',')
-    #dataFile = filePath * "inputs65.csv"
-    #policyData3 = loadtable(dataFile)
-    #save(policyTable, filePath * "ulData6")
-    #save(totpolicies, filePath * "ulData6")
+    writedlm(filePath * "inputs69.csv", totpolicies, ',')
+    writedlm(filePath * "prems69.csv", totprems, ',')
 end
 
 # ---------------------------------------------------------------------------- #
 
-function julia_main()#(gpu::Int64)
-    gpu = 0
-    filePath = datadir("exp_raw") * "\\"
-    #filePath = "C:/JuliaLifeVal/LifeVal/input/"
-    inpu= "Basis2020126.xlsx"
-    fileName = filePath * inpu
-
+function julia_main(gpu::Int64)
     try
-        if gpu == 1
+        if gpu == 1 #using CUDA
             real_main_gpu()
-        elseif gpu == 2
-            real_main_prem()
-        elseif gpu == 10
+        elseif gpu == 3  #using Distributed (NOT ENABLED YET)
+            real_main_cpu()
+        elseif gpu == 4  #e.g. using CUDA and Distributed (NOT ENABLED YET)
+            real_main_cpu()
+        elseif gpu == 10  #generating policies
             real_main_gen()
-        else
-            real_main(filePath, fileName)
+        elseif gpu == 20
+            real_main_prem()
+        else   #using Threads
+            real_main()
         end
     catch
         Base.invokelatest(Base.display_error, Base.catch_stack())
@@ -278,39 +219,61 @@ function julia_main()#(gpu::Int64)
     return 0
 end
 
-# print("settings: 0 = val (default), 1 = gpu, 2=pricing, 3 = multicore, 10 = generate \n\n")
-# print("What do you want to do ? \n\n")
-# inpu = readline()
-#num = parse(Int64, inpu)
-# num=0
+#THE FOLLOWING IS TESTED IN PROD ENVIRONMENT, NOT RUN IN TEST ENVIRONMENT
+#@show ARGS
+#@show Base.PROGRAM_FILE
+#@show DEPOT_PATH
+#@show LOAD_PATH
+#@show pwd()
+#@show Base.active_project()
+#@show Threads.nthreads()
+#@show Sys.BINDIR
+#display(Base.loaded_modules)
+#println()
 
-# print("Please copy path of input files ? \n\n")
-# inpu = readline()
-# inpu = inpu * "\\"
-# filePath = inpu
+#fooifier_path() = joinpath(artifact"fooifier", "bin", "fooifier" * (Sys.iswindows() ? ".exe" : ""))
 
-# filePath = "C:/JuliaLifeVal/LifeVal/input/"
+#FIXED VALUES FOR ALL RUNS / CURRENT SETTINGS FOR ALL
+PolicyType = [LifeValStructures.LifeAssurance, LifeValStructures.TermAssurance, LifeValStructures.Annuity, LifeValStructures.EndowmentAssurance, LifeValStructures.LifeAssuranceUL, LifeValStructures.EndowmentAssuranceUL]
+inputOrder = (:id, :sex, :age, :Term, :Term_if, :Premium, :Sum_Assured, :spc,
+    :prem_esc, :sa_esc, :esc_m, :units_1, :units_99, :alloc_1, :alloc_99)
 
-# print("Please copy name of runsettings (5 char minimum) ? \n\n")
-# inpu = readline()
-# if inpu[end-4:end] != ".xlsx"   #appends xlsx
-#     inpu = inpu * ".xlsx"
-# end
-# fileName = filePath * inpu
+filePath = datadir("exp_raw") * "\\"   #current fixed input/output directory
 
-# inpu= "Basis2020126.xlsx"
-# fileName = filePath * inpu
+print("Do you want to repeat last run settings (y/n) ? \n\n")
+inpu = readline()
+if inpu == "y" || inpu == "Y" #note not working for GEN currently
+    fileName = filePath * "lastrun.xlsx"
+    print("settings: 0 = val (default), 1 = gpu, 2-9 = multicore/+, 10 = generate, 20=pricing \n\n")
+    print("What do you want to do ? \n\n")
+    inpu = readline()
+    num = parse(Int64, inpu)
+else
+    print("settings: 0 = val (default), 1 = gpu, 2-9 = multicore/+, 10 = generate, 20=pricing \n\n")
+    print("What do you want to do ? \n\n")
+    inpu = readline()
+    num = parse(Int64, inpu)
 
-# julia_main(num)
+    # print("Please copy path of input files ? \n\n") #ENABLE FOR CUSTOM DIR
+    # inpu = readline()
+    # filePath = inpu * "\\"
+
+    print("Please copy name of runsettings (5 char minimum) ? \n\n")
+    inpu = readline()
+    if inpu[end-4:end] != ".xlsx"   #appends xlsx
+        inpu = inpu * ".xlsx"
+    end
+    fileName = filePath * inpu
+end
+
+julia_main(num)
 
 end # module
 
 #LifeVal.julia_main(num)
 
-#temp converting data
-# dataFile = "c:\\JuliaLifeVal\\lifeval\\input\\prems65.csv"
-# dataFile = "c:\\JuliaLifeVal\\lifeval\\input\\inputs65.csv"
-# dataFile = "c:\\JuliaLifeVal\\lifeval\\input\\inputs-test1.csv"
-# policyData3 = loadtable(dataFile)
-# save(policyData3, "c:\\JuliaLifeVal\\lifeval\\input\\policyData65")
-# save(policyData3, "c:\\JuliaLifeVal\\lifeval\\input\\policyData2020126")
+#temp converting data (again, just lazy to go and find it each time)
+# filePath = datadir("exp_raw") * "\\"
+# dataFile = filePath * "inputs69.csv"
+# policyDataT = loadtable(dataFile)
+# JuliaDB.save(policyDataT, filePath * "policyData1250f")

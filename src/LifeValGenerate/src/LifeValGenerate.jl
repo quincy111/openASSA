@@ -22,13 +22,28 @@ function gen_normal(meanv, sdv, minv, maxv, fact)
     return (val * fact)
 end
 
+function gen_beta(alphav, betav, minv, maxv, fact)
+    x = rand(Beta(alphav,betav),1)
+    y=x[1]*fact
+    val = round(y, digits=-3)
+    if val < minv
+        val=minv
+    elseif val > maxv
+        val=maxv
+    end
+    return (val)
+end
+
+#the Gen function below generates 2 sets of output, the IF book and the at inception book
+#code is crudely written!  our appologies, to be revised but not top of list!
 function Gen(v::Vector)
     policies = Array{Int64}(undef, v[4], 17)
     prems = Array{Int64}(undef, v[4], 17)
 
     for n in 1:v[4]
+        #generate from Normal and Beta distributions!
         age = gen_normal(v[6],v[7],v[8],v[9],1)
-        sa = gen_normal(v[11],v[12],v[13],v[14],1000)
+        sa = gen_beta(v[11],v[12],v[13],v[14],v[23])
         term =gen_normal(v[16],v[17],v[18],v[19],1)
 
         if v[19] != 99  #term_if, ceiling if term applicable
@@ -84,51 +99,3 @@ function Gen(v::Vector)
 end
 
 end # module
-
-#d = Normal(50,10)
-
-#x = rand(d, 100)
-
-#quantile.(Normal(), [0.5, 0.95])
-#pdf.(Normal(),[0.5, 0.95])
-#cdf.(Normal(), [0.5, 0.95])
-
-#Binomial(p) # Discrete univariate
-#Cauchy(u, b)  # Continuous univariate
-#Multinomial(n, p) # Discrete multivariate
-#Wishart(nu, S)  # Continuous matrix-variate
-
-#fit(Normal, x)
-
-#test environment
-#Pkg.add("DataFrames")
-#Pkg.add("XLSX")
-#Pkg.add("Random")
-#Pkg.add("Distributions")
-#using DataFrames, XLSX
-#using Random, Distributions
-
-#filePath = "c:\\julialifeval\\lifeval\\input\\"
-#fileName = filePath * "rand_input2.xlsx"
-#inputs = DataFrame(XLSX.readtable(fileName, "randominput")...)
-#totprems = []
-#totprems = []
-#poltype=inputs[1,:]
-
-#for poltype in eachrow(inputs)
-    # eventually create struct called policyList
-    #poltypevec = Vector(poltype)
-    #policyList, premList =  Gen(poltypevec)
-    #premList =  LifeValGenerate.PremGen(poltypevec)
-    #for k in 1:length(policyList[:,1])
-    #    polvect=policyList[k,:]
-    #    push!(totprems,polvect)
-    #end
-    #for k in 1:length(premList[:,1])
-    #    premvect=premList[k,:]
-    #    push!(totprems,premvect)
-    #end
-#end
-
-#writedlm(filePath * "inputs65.csv", totprems, ',')
-#writedlm(filePath * "prems65.csv", totprems, ',')

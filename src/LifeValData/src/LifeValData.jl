@@ -12,6 +12,18 @@ function Initialise(filePath, fileName)
     runsettings = DataFrame(XLSX.readtable(fileName, main.RS[1])...)
     spcode = DataFrame(XLSX.readtable(fileName, main.SP[1])...)
 
+        #writes these as lastrun SETTINGS
+    XLSX.writetable(filePath * "lastrun.xlsx", MAIN =( DataFrames._columns(main), DataFrames._names(main) ),
+        TEMP1 =( DataFrames._columns(runsettings), DataFrames._names(runsettings) ),
+        TEMP2 =( DataFrames._columns(spcode), DataFrames._names(spcode) ), overwrite=true)
+
+    XLSX.openxlsx(filePath * "lastrun.xlsx", mode="rw") do xf
+        sheet = xf[2]
+        XLSX.rename!(sheet, main.RS[1])
+        sheet = xf[3]
+        XLSX.rename!(sheet, main.SP[1])
+    end
+
     #read bases - this should happen before reading policies for e.g. impact of unit pricing on policies
     qxname = Vector{String}()
     wxname = Vector{String}()
@@ -41,10 +53,11 @@ function Initialise(filePath, fileName)
     end
 
     names = DataFrame([qxname, wxname, vtname, expname, chname, fname, fbname])
-    #names!(names, [:qxname,:wxname,:vtname,:expname,:chname,:fname,:fbname])
     rename!(names, [:qxname,:wxname,:vtname,:expname,:chname,:fname,:fbname])
 
-    return [runsettings, spcode, names]
+    outpn = main.outv[1]
+
+    return [runsettings, spcode, names, outpn]
 end
 
 function Read_Data(runsettings, spcode, names, filePath)
