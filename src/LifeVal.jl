@@ -1,7 +1,11 @@
 module LifeVal
 
-using DrWatson
-@quickactivate "LifeVal"
+#using Distributed
+
+#@everywhere begin
+    using DrWatson
+    @quickactivate "LifeVal"
+#end
 
 using JuliaDB, DelimitedFiles, DataFrames, XLSX, ProgressMeter #, Traceur
 using Random, Distributions #not technically required, but added here so that all modules use same project
@@ -14,13 +18,6 @@ using LifeValData
 using LifeValFunc
 using LifeValReserve
 using LifeValGenerate
-
-# --------------------------------------------------- #
-#THE FOLLOWING SECTION SHOULD BE RUN ONCE FOR ANY CUSTOM INPUT (eg CSV/DB/SQLITE)
-#and should be added to the Data Conversion module eventually!
-#dataFile = "ulData2.csv"
-#policyData3 = loadtable(dataFile)
-#save(policyData3, "ulData3")
 
 function real_main()
     runsettings, spcode, names, outfile = LifeValData.Initialise(filePath, fileName)
@@ -273,7 +270,7 @@ end # module
 #LifeVal.julia_main(num)
 
 #temp converting data (again, just lazy to go and find it each time)
-# filePath = datadir("exp_raw") * "\\"
-# dataFile = filePath * "inputs69.csv"
-# policyDataT = loadtable(dataFile)
-# JuliaDB.save(policyDataT, filePath * "policyData1250f")
+ # filePath = datadir("exp_raw") * "\\"
+ # dataFile = filePath * "inputsA1.csv"
+ # policyDataT = loadtable(dataFile)
+ # JuliaDB.save(policyDataT, filePath * "policyDataA")
